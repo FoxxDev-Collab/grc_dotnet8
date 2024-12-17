@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@mikro-orm/seeder": "^6.4.1"
+  }
+}

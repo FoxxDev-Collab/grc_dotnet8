@@ -1,0 +1,7 @@
+grc-platform/
+├── frontend/           # Next.js frontend application
+├── backend/           # NestJS backend application
+├── docker/            # Docker configuration files
+├── docker-compose.yml # Container orchestration
+├── .env.example      # Environment variable template
+└── README.md         # Project documentation

@@ -1,0 +1,24 @@
+export enum ArtifactType {
+    POLICY = "POLICY",
+    PROCEDURE = "PROCEDURE",
+    DOCUMENTATION = "DOCUMENTATION",
+    SCAN_RESULT = "SCAN_RESULT",
+    CONFIGURATION = "CONFIGURATION",
+    TRAINING = "TRAINING",
+    AUDIT_LOG = "AUDIT_LOG",
+    EVIDENCE = "EVIDENCE",
+    OTHER = "OTHER"
+}
+export enum ArtifactStatus {
+    DRAFT = "DRAFT",
+    IN_REVIEW = "IN_REVIEW",
+    APPROVED = "APPROVED",
+    ARCHIVED = "ARCHIVED",
+    REJECTED = "REJECTED"
+}
+export enum ApprovalStatus {
+    PENDING = "PENDING",
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED",
+    NEEDS_WORK = "NEEDS_WORK"
+}

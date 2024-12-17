@@ -1,0 +1,63 @@
+## .NET Core
+bin/
+obj/
+*.dll
+*.pdb
+
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+
+## Environment Files
+*.env
+appsettings.*.json
+!appsettings.json
+!appsettings.Example.json
+
+## Temporary Files
+*.log
+*.tmp
+*.temp
+[Tt]emp/
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+
+## Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResults/
+
+## NuGet
+*.nupkg
+# NuGet Symbol Packages
+*.snupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/[Pp]ackages/repositories.config
+# NuGet v3's project.json files produces more ignorable files
+*.nuget.props
+*.nuget.targets
+
+## Rider
+.idea/
+*.sln.iml
+
+## Coverage Reports
+[Cc]overage/
+*.coverage
+*.coveragexml

@@ -1,0 +1,6 @@
+@GRCBackend.Api_HostAddress = http://localhost:5249
+
+GET {{GRCBackend.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
