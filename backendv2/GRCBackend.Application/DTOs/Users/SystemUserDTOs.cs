@@ -28,8 +28,7 @@ namespace GRCBackend.Application.DTOs.Users
         public string LastName { get; set; }
         
         // Additional properties beyond interface
-        public List<string> Roles { get; set; }
-        public Guid? OrganizationId { get; set; }
+        public string Role { get; set; } // Single role from frontend
     }
 
     public class UpdateSystemUserDto : IUpdateSystemUserDto

@@ -13,15 +13,18 @@ namespace GRCBackend.Application.Services
         private readonly ISystemUserRepository _systemUserRepository;
         private readonly IAuditService _auditService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IOrganizationService _organizationService;
 
         public SystemUserService(
             ISystemUserRepository systemUserRepository,
             IAuditService auditService,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IOrganizationService organizationService)
         {
             _systemUserRepository = systemUserRepository;
             _auditService = auditService;
             _currentUserService = currentUserService;
+            _organizationService = organizationService;
         }
 
         public async Task<IEnumerable<ISystemUserDto>> GetAllAsync()
@@ -61,31 +64,48 @@ namespace GRCBackend.Application.Services
 
         public async Task<ISystemUserDto> CreateAsync(ICreateSystemUserDto dto)
         {
-            var createDto = (CreateSystemUserDto)dto;
-            
             // Check if email is already in use
-            if (await _systemUserRepository.EmailExistsAsync(createDto.Email))
+            if (await _systemUserRepository.EmailExistsAsync(dto.Email))
             {
-                throw new InvalidOperationException($"Email {createDto.Email} is already in use");
+                throw new InvalidOperationException($"Email {dto.Email} is already in use");
+            }
+
+            // Get the provider organization
+            var providerOrg = await _organizationService.GetProviderOrganizationAsync();
+            if (providerOrg == null)
+            {
+                throw new InvalidOperationException("Provider organization not found");
             }
 
             var currentUser = _currentUserService.UserId;
             var now = DateTime.UtcNow;
 
+            // Convert the single role to a list of roles
+            var createDto = dto as CreateSystemUserDto;
+            var roles = new List<string>();
+            if (createDto?.Role != null)
+            {
+                roles.Add(createDto.Role);
+            }
+            else
+            {
+                roles.Add("PROVIDER_USER"); // Default role if none specified
+            }
+
             var user = new SystemUser
             {
-                Email = createDto.Email,
-                FirstName = createDto.FirstName,
-                LastName = createDto.LastName,
+                Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
                 IsActive = true,
                 CreatedAt = now,
                 UpdatedAt = now,
                 CreatedBy = currentUser.ToString(),
                 UpdatedBy = currentUser.ToString(),
                 LastLoginDate = null,
-                Roles = createDto.Roles ?? new List<string>(),
-                OrganizationId = createDto.OrganizationId,
-                PasswordHash = createDto.Password // Note: Infrastructure layer should hash this
+                Roles = roles,
+                OrganizationId = providerOrg.Id,
+                PasswordHash = dto.Password // Note: Infrastructure layer should hash this
             };
 
             var success = await _systemUserRepository.CreateAsync(user);
