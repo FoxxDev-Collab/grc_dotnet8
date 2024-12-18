@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using GRCBackend.Core.Interfaces;
-using GRCBackend.Core.Models;
+using GRCBackend.Core.Interfaces.DTOs;
+using GRCBackend.Application.DTOs;
 
 namespace GRCBackend.Api.Controllers
 {
@@ -28,17 +29,16 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "GlobalAdmin,ProviderAdmin")]
-        public async Task<ActionResult<IEnumerable<SystemUserDto>>> GetSystemUsers()
+        [Authorize(Roles = "GLOBAL_ADMIN,PROVIDER_ADMIN")]
+        public async Task<ActionResult<IEnumerable<ISystemUserDto>>> GetSystemUsers()
         {
             var users = await _systemUserService.GetAllAsync();
-            // Wrap in data property to match frontend expectations
             return Ok(new { data = users });
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "GlobalAdmin,ProviderAdmin")]
-        public async Task<ActionResult<SystemUserDto>> GetSystemUser(Guid id)
+        [Authorize(Roles = "GLOBAL_ADMIN,PROVIDER_ADMIN")]
+        public async Task<ActionResult<ISystemUserDto>> GetSystemUser(Guid id)
         {
             try
             {
@@ -52,8 +52,8 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "GlobalAdmin")]
-        public async Task<ActionResult<SystemUserDto>> CreateSystemUser(CreateSystemUserDto dto)
+        [Authorize(Roles = "GLOBAL_ADMIN")]
+        public async Task<ActionResult<ISystemUserDto>> CreateSystemUser([FromBody] ICreateSystemUserDto dto)
         {
             try
             {
@@ -67,8 +67,8 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "GlobalAdmin")]
-        public async Task<ActionResult<SystemUserDto>> UpdateSystemUser(Guid id, UpdateSystemUserDto dto)
+        [Authorize(Roles = "GLOBAL_ADMIN")]
+        public async Task<ActionResult<ISystemUserDto>> UpdateSystemUser(Guid id, [FromBody] IUpdateSystemUserDto dto)
         {
             if (id != dto.Id)
             {
@@ -91,7 +91,7 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "GlobalAdmin")]
+        [Authorize(Roles = "GLOBAL_ADMIN")]
         public async Task<ActionResult> DeleteSystemUser(Guid id)
         {
             try
@@ -110,10 +110,10 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpPut("{id}/password")]
-        public async Task<ActionResult> UpdatePassword(Guid id, SystemUserPasswordUpdateDto dto)
+        public async Task<ActionResult> UpdatePassword(Guid id, [FromBody] ISystemUserPasswordUpdateDto dto)
         {
-            // Only allow users to update their own password unless they're a GlobalAdmin
-            if (id != _currentUserService.UserId && !User.IsInRole("GlobalAdmin"))
+            // Only allow users to update their own password unless they're a GLOBAL_ADMIN
+            if (id != _currentUserService.UserId && !User.IsInRole("GLOBAL_ADMIN"))
             {
                 return Forbid();
             }

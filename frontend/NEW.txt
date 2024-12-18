@@ -1,0 +1,75 @@
+Considerations for more in-depth organization information:
+
+For a client organization to be considered fully onboarded and ready for system ATOs, several key elements need to be in place:
+Security Governance Framework
+This serves as your master blueprint. It should include the organization's security vision, objectives, and how security aligns with business goals. For small-medium businesses, this typically includes documenting the security organizational structure, roles and responsibilities, and decision-making processes. You'll want to template key positions like:
+
+Information System Security Manager (ISSM)
+Information System Security Officer (ISSO)
+System Owners
+Data Owners
+
+Policy Framework
+This forms the bedrock of your security program. Essential policies that should be templated include:
+
+Information Security Policy
+Access Control Policy
+Incident Response Policy
+Business Continuity Policy
+Acceptable Use Policy
+Data Classification and Handling Policy
+Change Management Policy
+Third-Party Risk Management Policy
+
+Security Risk Management Program
+This encompasses your threat model and risk assessment framework. It should document:
+
+Risk Assessment Methodology
+Risk Acceptance Criteria
+Risk Treatment Plans
+Risk Register Template
+Threat Model Framework
+Vulnerability Management Process
+
+Security Operations Framework
+This outlines how security is implemented day-to-day:
+
+Security Monitoring Strategy
+Incident Response Procedures
+Business Continuity Plans
+Disaster Recovery Procedures
+Configuration Management Process
+Change Control Procedures
+
+Training and Awareness Program
+A templated program should include:
+
+Security Awareness Training Materials
+Role-specific Training Requirements
+Training Schedule and Tracking Method
+Security Communication Plan
+
+Compliance and Audit Program
+This establishes how the organization maintains and demonstrates compliance:
+
+Compliance Requirements Register
+Audit Schedule
+Evidence Collection Procedures
+Control Assessment Templates
+POA&M Management Process
+
+Asset Management Program
+Before diving into specific systems for ATOs, you need:
+
+Asset Inventory Template
+Asset Classification Schema
+Asset Lifecycle Management Process
+Configuration Baseline Standards
+
+Third-Party Management Program
+For managing vendor and partner relationships:
+
+Vendor Assessment Templates
+Contract Security Requirements
+Third-party Monitoring Procedures
+Service Level Agreement Templates

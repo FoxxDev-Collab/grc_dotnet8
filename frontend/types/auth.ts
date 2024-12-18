@@ -8,7 +8,10 @@ export enum SystemRole {
 
 // Base interfaces
 interface BaseAuthResponse {
+  success: boolean;
   access_token: string;
+  refresh_token: string;
+  errors: string[];
   user: BaseUser;
 }
 
@@ -36,14 +39,6 @@ export interface SystemLoginRequest {
   password: string;
 }
 
-export interface SystemRegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: SystemRole;
-}
-
 // Client-specific interfaces
 export interface ClientUser extends BaseUser {
   organizationId: string;
@@ -61,15 +56,6 @@ export interface ClientAuthResponse extends BaseAuthResponse {
 export interface ClientLoginRequest {
   email: string;
   password: string;
-}
-
-export interface ClientRegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  organizationName: string;
-  organizationType: 'CLIENT' | 'SERVICE_PROVIDER';
 }
 
 // API Response interfaces

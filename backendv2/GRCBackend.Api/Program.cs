@@ -10,6 +10,8 @@ using Npgsql;
 using IAuthService = GRCBackend.Core.Interfaces.IAuthenticationService;
 using AuthService = GRCBackend.Application.Services.AuthenticationService;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 // Load .env file before anything else
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
@@ -39,8 +41,14 @@ builder.Configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        // Use camelCase for property names
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        // Handle enums as strings
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        // Ignore null values
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        // Preserve references and handle circular references
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -74,8 +82,8 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         ClockSkew = TimeSpan.Zero,
-        NameClaimType = ClaimTypes.NameIdentifier, // Maps to 'sub'
-        RoleClaimType = ClaimTypes.Role // Maps to 'role'
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role
     };
 
     options.Events = new JwtBearerEvents
@@ -140,6 +148,7 @@ if (builder.Environment.IsDevelopment())
         options.AddDefaultPolicy(builder =>
         {
             builder
+                .WithOrigins("http://localhost:3000") 
                 .SetIsOriginAllowed(_ => true) // Allow any origin in development
                 .AllowAnyMethod()
                 .AllowAnyHeader()

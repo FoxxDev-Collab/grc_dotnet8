@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using GRCBackend.Core.Entities;
 using GRCBackend.Core.Interfaces;
 using GRCBackend.Common.Enums;
+using GRCBackend.Application.DTOs;
 
 namespace GRCBackend.Application.Services
 {
@@ -190,6 +191,59 @@ namespace GRCBackend.Application.Services
             return organization;
         }
 
+        public async Task<IEnumerable<object>> GetOrganizationUsersAsync(Guid organizationId, int page, int pageSize)
+        {
+            if (!await CanUserAccessOrganizationAsync(_currentUserService.UserId, organizationId))
+            {
+                throw new UnauthorizedAccessException("User does not have access to this organization");
+            }
+
+            var organization = await _context.Organizations
+                .Include(o => o.SystemUsers)
+                .Include(o => o.ClientUsers)
+                .FirstOrDefaultAsync(o => o.Id == organizationId);
+
+            if (organization == null)
+            {
+                throw new InvalidOperationException("Organization not found");
+            }
+
+            var users = new List<UserDTO>();
+
+            // Add system users
+            users.AddRange(organization.SystemUsers.Select(u => new UserDTO
+            {
+                Id = u.Id.ToString(),
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Role = u.Roles.FirstOrDefault() ?? "USER",
+                Type = "system",
+                IsActive = u.IsActive,
+                LastLogin = u.LastLoginDate?.ToString("O")
+            }));
+
+            // Add client users
+            users.AddRange(organization.ClientUsers.Select(u => new UserDTO
+            {
+                Id = u.Id.ToString(),
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Role = u.OrganizationRole,
+                Type = "client",
+                IsActive = u.IsActive,
+                LastLogin = u.LastLoginDate?.ToString("O"),
+                OrganizationId = organizationId.ToString()
+            }));
+
+            // Apply pagination
+            return users
+                .OrderBy(u => u.Email)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize);
+        }
+
         public async Task<bool> CanUserAccessOrganizationAsync(Guid userId, Guid organizationId)
         {
             var userOrg = await GetUserOrganizationAsync(userId);
@@ -326,6 +380,11 @@ namespace GRCBackend.Application.Services
         {
             return await _context.Organizations
                 .AnyAsync(o => o.Type == OrganizationType.SERVICE_PROVIDER && o.IsActive);
+        }
+
+        private bool IsGlobalAdmin(string role)
+        {
+            return string.Equals(role, "GLOBAL_ADMIN", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

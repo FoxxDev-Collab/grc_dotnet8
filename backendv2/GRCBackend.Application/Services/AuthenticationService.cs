@@ -38,20 +38,12 @@ namespace GRCBackend.Application.Services
             var user = await _systemUserRepository.GetByEmailAsync(email);
             if (user == null || !VerifyPassword(password, user.PasswordHash))
             {
-                return new AuthenticationResult 
-                { 
-                    Success = false,
-                    Errors = new[] { "Invalid email or password" }
-                };
+                return AuthenticationResult.Failure("Invalid email or password");
             }
 
             if (!user.IsActive)
             {
-                return new AuthenticationResult 
-                { 
-                    Success = false,
-                    Errors = new[] { "Account is deactivated" }
-                };
+                return AuthenticationResult.Failure("Account is deactivated");
             }
 
             var role = user.Roles.FirstOrDefault() ?? "USER";
@@ -68,13 +60,7 @@ namespace GRCBackend.Application.Services
                 throw new InvalidOperationException("Failed to map user model");
             }
 
-            return new AuthenticationResult
-            {
-                Success = true,
-                Token = accessToken,
-                RefreshToken = refreshToken,
-                SystemUser = userModel
-            };
+            return AuthenticationResult.Success(userModel, accessToken, refreshToken);
         }
 
         public async Task<AuthenticationResult> AuthenticateClientUserAsync(string email, string password)
@@ -82,20 +68,12 @@ namespace GRCBackend.Application.Services
             var user = await _clientUserRepository.GetByEmailAsync(email);
             if (user == null || !VerifyPassword(password, user.PasswordHash))
             {
-                return new AuthenticationResult 
-                { 
-                    Success = false,
-                    Errors = new[] { "Invalid email or password" }
-                };
+                return AuthenticationResult.Failure("Invalid email or password");
             }
 
             if (!user.IsActive)
             {
-                return new AuthenticationResult 
-                { 
-                    Success = false,
-                    Errors = new[] { "Account is deactivated" }
-                };
+                return AuthenticationResult.Failure("Account is deactivated");
             }
 
             var role = user.OrganizationRoles.FirstOrDefault() ?? "USER";
@@ -112,13 +90,7 @@ namespace GRCBackend.Application.Services
                 throw new InvalidOperationException("Failed to map user model");
             }
 
-            return new AuthenticationResult
-            {
-                Success = true,
-                Token = accessToken,
-                RefreshToken = refreshToken,
-                ClientUser = userModel
-            };
+            return AuthenticationResult.Success(userModel, accessToken, refreshToken);
         }
 
         public async Task<AuthenticationResult> RefreshTokenAsync(string refreshToken)
@@ -137,11 +109,7 @@ namespace GRCBackend.Application.Services
                 return await RefreshUserTokenAsync(clientUser, role);
             }
 
-            return new AuthenticationResult
-            {
-                Success = false,
-                Errors = new[] { "Invalid refresh token" }
-            };
+            return AuthenticationResult.Failure("Invalid refresh token");
         }
 
         public async Task<bool> RevokeTokenAsync(string refreshToken)
@@ -227,9 +195,9 @@ namespace GRCBackend.Application.Services
 
             var claims = new[]
             {
-                new Claim("sub", baseEntity.Id.ToString()),
-                new Claim("email", user.Email),
-                new Claim("role", role),
+                new Claim(ClaimTypes.NameIdentifier, baseEntity.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, role.ToUpper()),
                 new Claim("type", user is SystemUser ? "system" : "client")
             };
 
@@ -255,22 +223,10 @@ namespace GRCBackend.Application.Services
 
             if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                return new AuthenticationResult
-                {
-                    Success = false,
-                    Errors = new[] { "Refresh token has expired" }
-                };
+                return AuthenticationResult.Failure("Refresh token has expired");
             }
 
             var (accessToken, refreshToken) = GenerateTokens(user, role);
-
-            var result = new AuthenticationResult
-            {
-                Success = true,
-                Token = accessToken,
-                RefreshToken = refreshToken,
-                Errors = Array.Empty<string>()
-            };
 
             if (user is SystemUser systemUser)
             {
@@ -283,7 +239,7 @@ namespace GRCBackend.Application.Services
                 {
                     throw new InvalidOperationException("Failed to map system user model");
                 }
-                result.SystemUser = systemUserModel;
+                return AuthenticationResult.Success(systemUserModel, accessToken, refreshToken);
             }
             else if (user is ClientUser clientUser)
             {
@@ -296,10 +252,10 @@ namespace GRCBackend.Application.Services
                 {
                     throw new InvalidOperationException("Failed to map client user model");
                 }
-                result.ClientUser = clientUserModel;
+                return AuthenticationResult.Success(clientUserModel, accessToken, refreshToken);
             }
 
-            return result;
+            throw new InvalidOperationException("Unknown user type");
         }
 
         private string GenerateRefreshToken()

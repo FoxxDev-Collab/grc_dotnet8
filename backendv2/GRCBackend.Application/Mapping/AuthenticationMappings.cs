@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using GRCBackend.Core.Models;
 using GRCBackend.Core.Entities;
 using GRCBackend.Application.DTOs;
@@ -7,27 +8,11 @@ namespace GRCBackend.Application.Mapping
 {
     public static class AuthenticationMappings
     {
-        public static SystemUserModel? ToModel(SystemUser? entity)
+        public static AuthenticatedSystemUser? ToModel(SystemUser? entity)
         {
             if (entity == null) return null;
 
-            return new SystemUserModel
-            {
-                Id = entity.Id.ToString(),
-                Email = entity.Email,
-                FirstName = entity.FirstName,
-                LastName = entity.LastName,
-                Role = entity.Roles?.FirstOrDefault() ?? "USER",
-                IsActive = entity.IsActive,
-                LastLogin = entity.LastLoginDate
-            };
-        }
-
-        public static ClientUserModel? ToModel(ClientUser? entity)
-        {
-            if (entity == null) return null;
-
-            return new ClientUserModel
+            return new AuthenticatedSystemUser
             {
                 Id = entity.Id.ToString(),
                 Email = entity.Email,
@@ -35,17 +20,28 @@ namespace GRCBackend.Application.Mapping
                 LastName = entity.LastName,
                 IsActive = entity.IsActive,
                 LastLogin = entity.LastLoginDate,
-                ClientRole = entity.ClientRole,
-                OrganizationRole = entity.OrganizationRole,
-                Organization = entity.Organization != null ? new OrganizationModel
-                {
-                    Id = entity.Organization.Id.ToString(),
-                    Name = entity.Organization.Name
-                } : null
+                Permissions = entity.Roles?.ToList() ?? new List<string>()
             };
         }
 
-        public static AuthenticationResponseDTO ToDto(AuthenticationResult model)
+        public static AuthenticatedClientUser? ToModel(ClientUser? entity)
+        {
+            if (entity == null) return null;
+
+            return new AuthenticatedClientUser
+            {
+                Id = entity.Id.ToString(),
+                Email = entity.Email,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                IsActive = entity.IsActive,
+                LastLogin = entity.LastLoginDate,
+                OrganizationId = entity.Organization?.Id.ToString() ?? string.Empty,
+                OrganizationRole = entity.OrganizationRole
+            };
+        }
+
+        public static AuthenticationResponseDTO ToDto(AuthenticationResult result)
         {
             var defaultUser = new UserDTO
             {
@@ -60,49 +56,48 @@ namespace GRCBackend.Application.Mapping
                 OrganizationId = null
             };
 
-            var userDto = model.SystemUser != null ? MapSystemUser(model.SystemUser) :
-                         model.ClientUser != null ? MapClientUser(model.ClientUser) :
-                         defaultUser;
+            var userDto = result.User != null ? MapUser(result.User) : defaultUser;
 
             return new AuthenticationResponseDTO
             {
-                Success = model.Success,
-                AccessToken = model.Token ?? string.Empty,
-                RefreshToken = model.RefreshToken ?? string.Empty,
-                Errors = model.Errors ?? Array.Empty<string>(),
+                Success = result.Successful,
+                AccessToken = result.AccessToken ?? string.Empty,
+                RefreshToken = result.RefreshToken ?? string.Empty,
+                Errors = result.Errors ?? Array.Empty<string>(),
                 User = userDto
             };
         }
 
-        private static UserDTO MapSystemUser(SystemUserModel user)
+        private static UserDTO MapUser(AuthenticatedUser user)
         {
-            return new UserDTO
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Role = user.Role,
-                Type = "system",
-                IsActive = user.IsActive,
-                LastLogin = user.LastLogin?.ToString("O"),
-                OrganizationId = null // System users don't have an organization
-            };
-        }
+            string role;
+            string? organizationId = null;
 
-        private static UserDTO MapClientUser(ClientUserModel user)
-        {
+            if (user is AuthenticatedSystemUser systemUser)
+            {
+                role = systemUser.Permissions.FirstOrDefault() ?? "USER";
+            }
+            else if (user is AuthenticatedClientUser authenticatedClientUser)
+            {
+                role = authenticatedClientUser.OrganizationRole;
+                organizationId = authenticatedClientUser.OrganizationId;
+            }
+            else
+            {
+                role = "NONE";
+            }
+
             return new UserDTO
             {
                 Id = user.Id,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Role = user.ClientRole,
-                Type = "client",
+                Role = role,
+                Type = user.UserType,
                 IsActive = user.IsActive,
                 LastLogin = user.LastLogin?.ToString("O"),
-                OrganizationId = user.Organization?.Id
+                OrganizationId = organizationId
             };
         }
     }

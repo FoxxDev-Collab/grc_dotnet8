@@ -184,29 +184,24 @@ export function SystemUserAssignments({ userRole }: SystemUserAssignmentsProps) 
                 <TableCell className="font-medium">{org.name}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-2">
-                    {organizationUsers[org.id]?.map((userOrg) => {
-                      // Only show system users
-                      if (!userOrg.systemUser) return null;
-                      
-                      return (
-                        <Badge
-                          key={userOrg.id}
-                          className="flex items-center gap-1"
-                        >
-                          {userOrg.systemUser.email}
-                          {userRole === SystemRole.GLOBAL_ADMIN && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-4 w-4 p-0 hover:bg-transparent"
-                              onClick={() => handleRemoveUser(org.id, userOrg.systemUser!.id)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </Badge>
-                      );
-                    })}
+                    {organizationUsers[org.id]?.filter(userOrg => userOrg.systemUser).map((userOrg) => (
+                      <Badge
+                        key={userOrg.id}
+                        className="flex items-center gap-1"
+                      >
+                        {userOrg.systemUser!.email}
+                        {userRole === SystemRole.GLOBAL_ADMIN && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 p-0 hover:bg-transparent"
+                            onClick={() => handleRemoveUser(org.id, userOrg.systemUser!.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </Badge>
+                    ))}
                   </div>
                 </TableCell>
                 {userRole === SystemRole.GLOBAL_ADMIN && (

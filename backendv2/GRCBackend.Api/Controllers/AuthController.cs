@@ -40,7 +40,7 @@ namespace GRCBackend.Api.Controllers
             
             var result = await _authService.AuthenticateSystemUserAsync(request.Email, request.Password);
             
-            if (!result.Success)
+            if (!result.Successful)
             {
                 _logger.LogWarning("System login failed for email: {Email}. Errors: {Errors}", 
                     request.Email, string.Join(", ", result.Errors ?? Array.Empty<string>()));
@@ -54,7 +54,7 @@ namespace GRCBackend.Api.Controllers
             Response.Headers["Access-Control-Expose-Headers"] = "Authorization";
 
             var response = AuthenticationMappings.ToDto(result);
-            return Ok(response);
+            return Ok(new { data = response });
         }
 
         [HttpPost("client/login")]
@@ -64,7 +64,7 @@ namespace GRCBackend.Api.Controllers
             
             var result = await _authService.AuthenticateClientUserAsync(request.Email, request.Password);
             
-            if (!result.Success)
+            if (!result.Successful)
             {
                 _logger.LogWarning("Client login failed for email: {Email}. Errors: {Errors}", 
                     request.Email, string.Join(", ", result.Errors ?? Array.Empty<string>()));
@@ -78,7 +78,7 @@ namespace GRCBackend.Api.Controllers
             Response.Headers["Access-Control-Expose-Headers"] = "Authorization";
 
             var response = AuthenticationMappings.ToDto(result);
-            return Ok(response);
+            return Ok(new { data = response });
         }
 
         [HttpGet("profile")]
@@ -118,15 +118,10 @@ namespace GRCBackend.Api.Controllers
                     return StatusCode(500, new { Error = "Failed to map user data" });
                 }
 
-                var result = new AuthenticationResult 
-                { 
-                    Success = true,
-                    SystemUser = systemUserModel,
-                    Errors = Array.Empty<string>()
-                };
+                var result = AuthenticationResult.Success(systemUserModel, string.Empty, string.Empty);
 
                 _logger.LogInformation("Successfully retrieved system user profile for ID: {UserId}", userId);
-                return Ok(AuthenticationMappings.ToDto(result).User);
+                return Ok(new { data = AuthenticationMappings.ToDto(result).User });
             }
             else if (userType == "client")
             {
@@ -144,15 +139,10 @@ namespace GRCBackend.Api.Controllers
                     return StatusCode(500, new { Error = "Failed to map user data" });
                 }
 
-                var result = new AuthenticationResult 
-                { 
-                    Success = true,
-                    ClientUser = clientUserModel,
-                    Errors = Array.Empty<string>()
-                };
+                var result = AuthenticationResult.Success(clientUserModel, string.Empty, string.Empty);
 
                 _logger.LogInformation("Successfully retrieved client user profile for ID: {UserId}", userId);
-                return Ok(AuthenticationMappings.ToDto(result).User);
+                return Ok(new { data = AuthenticationMappings.ToDto(result).User });
             }
 
             _logger.LogWarning("Invalid user type: {UserType}", userType);
@@ -166,7 +156,7 @@ namespace GRCBackend.Api.Controllers
             
             var result = await _authService.RefreshTokenAsync(request.RefreshToken);
             
-            if (!result.Success)
+            if (!result.Successful)
             {
                 _logger.LogWarning("Token refresh failed. Errors: {Errors}", 
                     string.Join(", ", result.Errors ?? Array.Empty<string>()));
@@ -176,7 +166,7 @@ namespace GRCBackend.Api.Controllers
             _logger.LogInformation("Token refresh successful");
 
             var response = AuthenticationMappings.ToDto(result);
-            return Ok(response);
+            return Ok(new { data = response });
         }
 
         [HttpPost("revoke-token")]
@@ -194,7 +184,7 @@ namespace GRCBackend.Api.Controllers
             }
 
             _logger.LogInformation("Token revocation successful");
-            return Ok(new { Message = "Token revoked successfully" });
+            return Ok(new { data = new { message = "Token revoked successfully" } });
         }
 
         [HttpGet("validate-token")]
@@ -205,7 +195,7 @@ namespace GRCBackend.Api.Controllers
             var isValid = await _authService.ValidateTokenAsync(token);
             
             _logger.LogInformation("Token validation result: {IsValid}", isValid);
-            return Ok(new { IsValid = isValid });
+            return Ok(new { data = new { isValid = isValid } });
         }
 
         [HttpOptions("{*path}")]

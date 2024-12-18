@@ -25,9 +25,25 @@ export class OrganizationsApi extends BaseApi {
 
   static async getAll(page = 1, pageSize = 10): Promise<ApiResponse<Organization[]>> {
     console.log('[Organizations API] Fetching all organizations', { page, pageSize });
-    const response = await this.get<Organization[]>(`/organizations?page=${page}&pageSize=${pageSize}`);
-    console.log('[Organizations API] GetAll response', response);
-    return response;
+    
+    // First get the provider organization
+    const providerResponse = await this.get<Organization>('/organizations/provider');
+    console.log('[Organizations API] GetProvider response', providerResponse);
+
+    // Then get client organizations
+    const clientsResponse = await this.get<Organization[]>(`/organizations/clients`);
+    console.log('[Organizations API] GetClients response', clientsResponse);
+
+    // Combine provider and client organizations
+    const organizations: Organization[] = [];
+    if (providerResponse.data) {
+      organizations.push(providerResponse.data);
+    }
+    if (clientsResponse.data) {
+      organizations.push(...clientsResponse.data);
+    }
+
+    return { data: organizations };
   }
 
   static async getById(id: string): Promise<ApiResponse<Organization>> {

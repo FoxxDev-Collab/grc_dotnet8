@@ -3,8 +3,6 @@ import type {
   ClientAuthResponse,
   SystemLoginRequest,
   ClientLoginRequest,
-  SystemRegisterRequest,
-  ClientRegisterRequest,
   ApiResponse,
   ApiError,
   SystemUser,
@@ -32,8 +30,9 @@ export class Api {
       throw error;
     }
 
-    const data = await response.json();
-    return { data };
+    const jsonResponse = await response.json();
+    // Handle nested data structure from backend
+    return { data: jsonResponse.data };
   }
 
   private static getHeaders(includeContentType = true): HeadersInit {
@@ -126,47 +125,9 @@ export class Api {
     return response;
   }
 
-  static async systemRegister(data: SystemRegisterRequest): Promise<ApiResponse<SystemAuthResponse>> {
-    const response = await this.post<SystemAuthResponse, SystemRegisterRequest>('/auth/system/register', data);
-
-    if (response.data) {
-      Cookies.set('token', response.data.access_token, { 
-        sameSite: 'lax',
-        secure: window.location.protocol === 'https:',
-        path: '/'
-      });
-      Cookies.set('userType', 'system', {
-        sameSite: 'lax',
-        secure: window.location.protocol === 'https:',
-        path: '/'
-      });
-    }
-
-    return response;
-  }
-
   // Client Authentication Methods
   static async clientLogin(data: ClientLoginRequest): Promise<ApiResponse<ClientAuthResponse>> {
     const response = await this.post<ClientAuthResponse, ClientLoginRequest>('/auth/client/login', data);
-
-    if (response.data) {
-      Cookies.set('token', response.data.access_token, { 
-        sameSite: 'lax',
-        secure: window.location.protocol === 'https:',
-        path: '/'
-      });
-      Cookies.set('userType', 'client', { 
-        sameSite: 'lax',
-        secure: window.location.protocol === 'https:',
-        path: '/'
-      });
-    }
-
-    return response;
-  }
-
-  static async clientRegister(data: ClientRegisterRequest): Promise<ApiResponse<ClientAuthResponse>> {
-    const response = await this.post<ClientAuthResponse, ClientRegisterRequest>('/auth/client/register', data);
 
     if (response.data) {
       Cookies.set('token', response.data.access_token, { 

@@ -19,6 +19,9 @@ namespace GRCBackend.Core.Interfaces
         Task<IEnumerable<Organization>> GetClientOrganizationsAsync();
         Task<Organization> GetClientOrganizationByIdAsync(Guid id);
 
+        // User Management
+        Task<IEnumerable<object>> GetOrganizationUsersAsync(Guid organizationId, int page, int pageSize);
+
         // Access Control
         Task<bool> CanUserAccessOrganizationAsync(Guid userId, Guid organizationId);
         Task<bool> CanUserPerformActionAsync(Guid userId, Guid organizationId, string action);

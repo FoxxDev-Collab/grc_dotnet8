@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Api from '@/lib/api';
+import { useOrganizationStore } from '@/stores/useOrganizationStore';
 import type { SystemUser, ClientUser } from '@/types/auth';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LogOut, Loader2 } from 'lucide-react';
@@ -18,34 +19,61 @@ export default function ProviderLayout({
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<SystemUser | ClientUser | null>(null);
+  const { fetchOrganization, setCurrentOrganization } = useOrganizationStore();
 
   useEffect(() => {
     const handleLogout = async () => {
       try {
         await Api.logout();
         localStorage.removeItem('user');
+        setCurrentOrganization(null);
         setUser(null);
         router.push('/provider/login');
       } catch (error) {
         console.error('Logout failed:', error);
         localStorage.removeItem('user');
+        setCurrentOrganization(null);
         setUser(null);
         router.push('/provider/login');
       }
     };
 
+    const initializeData = async (userData: SystemUser | ClientUser) => {
+      try {
+        if (userData.type === 'system') {
+          // For system users, fetch the provider organization
+          const orgResponse = await Api.get<{ data: { id: string } }>('/organizations/provider');
+          if (orgResponse.data?.data?.id) {
+            await fetchOrganization(orgResponse.data.data.id);
+          }
+        } else if (userData.type === 'client') {
+          // For client users, fetch their organization
+          if (userData.organizationId) {
+            await fetchOrganization(userData.organizationId);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize data:', error);
+      }
+    };
+
     const checkAuth = async () => {
       try {
+        console.log('Checking authentication...');
         const response = await Api.getProfile();
         
+        console.log('Auth response:', response);
+
         if (response.error) {
-          handleLogout();
-          return;
-        }
+      console.log('Auth error, logging out:', response.error);
+      handleLogout();
+      return;
+    }
 
         if (response.data) {
           localStorage.setItem('user', JSON.stringify(response.data));
           setUser(response.data);
+          await initializeData(response.data);
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
@@ -56,7 +84,7 @@ export default function ProviderLayout({
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, fetchOrganization, setCurrentOrganization]);
 
   // Handle organization routes separately for client users
   if (user?.type === 'client' && pathname?.includes('/organization/')) {
@@ -79,11 +107,13 @@ export default function ProviderLayout({
     try {
       await Api.logout();
       localStorage.removeItem('user');
+      setCurrentOrganization(null);
       setUser(null);
       router.push('/provider/login');
     } catch (error) {
       console.error('Logout failed:', error);
       localStorage.removeItem('user');
+      setCurrentOrganization(null);
       setUser(null);
       router.push('/provider/login');
     }
