@@ -30,7 +30,7 @@ namespace GRCBackend.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "GLOBAL_ADMIN,PROVIDER_ADMIN")]
-        public async Task<ActionResult<IEnumerable<ISystemUserDto>>> GetSystemUsers()
+        public async Task<ActionResult<IEnumerable<SystemUserDto>>> GetSystemUsers()
         {
             var users = await _systemUserService.GetAllAsync();
             return Ok(new { data = users });
@@ -38,7 +38,7 @@ namespace GRCBackend.Api.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "GLOBAL_ADMIN,PROVIDER_ADMIN")]
-        public async Task<ActionResult<ISystemUserDto>> GetSystemUser(Guid id)
+        public async Task<ActionResult<SystemUserDto>> GetSystemUser(Guid id)
         {
             try
             {
@@ -53,11 +53,11 @@ namespace GRCBackend.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "GLOBAL_ADMIN")]
-        public async Task<ActionResult<ISystemUserDto>> CreateSystemUser([FromBody] ICreateSystemUserDto dto)
+        public async Task<ActionResult<SystemUserDto>> CreateSystemUser([FromBody] CreateSystemUserDto createDto)
         {
             try
             {
-                var user = await _systemUserService.CreateAsync(dto);
+                var user = await _systemUserService.CreateAsync(createDto);
                 return CreatedAtAction(nameof(GetSystemUser), new { id = user.Id }, new { data = user });
             }
             catch (InvalidOperationException ex)
@@ -68,16 +68,16 @@ namespace GRCBackend.Api.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "GLOBAL_ADMIN")]
-        public async Task<ActionResult<ISystemUserDto>> UpdateSystemUser(Guid id, [FromBody] IUpdateSystemUserDto dto)
+        public async Task<ActionResult<SystemUserDto>> UpdateSystemUser(Guid id, [FromBody] UpdateSystemUserDto updateDto)
         {
-            if (id != dto.Id)
+            if (id != updateDto.Id)
             {
                 return BadRequest(new { message = "ID mismatch" });
             }
 
             try
             {
-                var user = await _systemUserService.UpdateAsync(dto);
+                var user = await _systemUserService.UpdateAsync(updateDto);
                 return Ok(new { data = user });
             }
             catch (KeyNotFoundException)
@@ -110,7 +110,7 @@ namespace GRCBackend.Api.Controllers
         }
 
         [HttpPut("{id}/password")]
-        public async Task<ActionResult> UpdatePassword(Guid id, [FromBody] ISystemUserPasswordUpdateDto dto)
+        public async Task<ActionResult> UpdatePassword(Guid id, [FromBody] SystemUserPasswordUpdateDto passwordDto)
         {
             // Only allow users to update their own password unless they're a GLOBAL_ADMIN
             if (id != _currentUserService.UserId && !User.IsInRole("GLOBAL_ADMIN"))
@@ -120,7 +120,7 @@ namespace GRCBackend.Api.Controllers
 
             try
             {
-                var result = await _systemUserService.UpdatePasswordAsync(id, dto);
+                var result = await _systemUserService.UpdatePasswordAsync(id, passwordDto);
                 if (result)
                 {
                     return NoContent();
